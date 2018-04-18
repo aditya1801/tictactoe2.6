@@ -39,6 +39,10 @@ app.get("/leaderboard", function (req, res) {
 res.sendFile(__dirname + "/leaderboard.html");
 });
 
+app.get("/pastgame", function (req, res) {
+res.sendFile(__dirname + "/pastgame.html");
+});
+
 app.get("/index", function (req, res) {
 res.sendFile(__dirname + "/index.html");
 }); 
@@ -230,8 +234,20 @@ io.sockets.on('connection',function(socket){
         
 
     });
+    socket.on('view pastgames',function(data)
+    {
+        var query = "SELECT * FROM pastgames WHERE realusername='"+data.user+"'";
+        connection2.query(query, function(err,results) {
+          console.log(results);
+          mrecords=results;
+          
+        });
+        
+
+    });
     socket.on('view leaderboard',function(data)
     {
+        console.log("inside server leaderboard");
         var query = "SELECT * FROM multiplayerrecords ORDER BY rating DESC,no_of_wins DESC,no_of_loses ASC, max_winning_streak DESC,max_losing_streak ASC,max_drawing_streak DESC";
         connection2.query(query, function(err,results) {
           console.log(results);
@@ -243,10 +259,12 @@ io.sockets.on('connection',function(socket){
     });
 	socket.on('new record',function(data)
 	{
+        var currentdate=new Date();
+        console.log(currentdate);
 		var lastrecord;
 		var currentwinningstreak,currentlosingstreak,currentdrawingstreak;
 		var maxwinningstreak,maxlosingstreak,maxdrawingstreak;
-		var query2;
+		var query2,query4;
 		var query = "SELECT * FROM multiplayerrecords WHERE username='"+data.user+"'";
         connection2.query(query, function(err,results) {
         lastrecord=results[0]['lastrecord'];
@@ -264,6 +282,8 @@ io.sockets.on('connection',function(socket){
 		{
             var query="UPDATE multiplayerrecords SET  no_of_wins=no_of_wins+1,rating=rating+50 WHERE username='"+data.user+"'";
             var query3="UPDATE player SET  rating=rating+50 WHERE username='"+data.user+"'";
+            var query4="INSERT INTO pastgames(realusername,username1,username2,status,time) VALUES ('"+data.user+"','"+data.p1+"', '"+data.p2+"', 'win','"+currentdate+"')";
+            console.log(query4);
             if(lastrecord==1||lastrecord==-1)
             	{
             		currentwinningstreak+=1;
@@ -287,6 +307,7 @@ io.sockets.on('connection',function(socket){
 		{
             var query3="UPDATE player SET  rating=rating-50 WHERE username='"+data.user+"'";
             var query="UPDATE multiplayerrecords SET  no_of_loses=no_of_loses+1,rating=rating-50 WHERE username='"+data.user+"'";
+            var query4="INSERT INTO pastgames(realusername,username1,username2,status,time) VALUES ('"+data.user+"','"+data.p1+"', '"+data.p2+"', 'lose','"+currentdate+"')";
             if(lastrecord==0||lastrecord==-1)
             	{
             		currentlosingstreak+=1;
@@ -308,7 +329,8 @@ io.sockets.on('connection',function(socket){
 		{
             var query3="UPDATE player SET  rating=rating WHERE username='"+data.user+"'";
 			var query="UPDATE multiplayerrecords SET  no_of_draws=no_of_draws+1 WHERE username='"+data.user+"'";
-			 if(lastrecord==3||lastrecord==-1)
+           var query4="INSERT INTO pastgames(realusername,username1,username2,status,time) VALUES ('"+data.user+"','"+data.p1+"', '"+data.p2+"', 'draw','"+currentdate+"')";
+            if(lastrecord==3||lastrecord==-1)
             	{currentdrawingstreak+=1;
             	 lastrecord=3;
             	}
@@ -327,6 +349,7 @@ io.sockets.on('connection',function(socket){
 		connection2.query(query);
 		connection2.query(query2);
         connection2.query(query3);	
+        connection2.query(query4);
 	    });
 		
        
