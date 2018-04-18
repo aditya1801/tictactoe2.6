@@ -132,6 +132,7 @@
 		<button id="playmultiplayerbutton2" onclick="playmultiplayerfun2()" class ="btn btn-primary">play multiplayer(offline)</button><br><br>
     <button id="viewstatsbutton" onclick="viewstatsfun()" class ="btn btn-primary">view stats</button><br><br>
     <button id="viewleaderboardbutton" onclick="viewleaderboardfun()" class ="btn btn-primary">view leaderboard</button><br><br>
+    <button id="viewpastgames" onclick="viewpastgames()" class ="btn btn-primary">pastgames</button><br><br>
 		<textarea id="waittext" readonly>wait for another player</textarea>
 		<div id="userFormArea" class="row">
 			<div class="col-md-12">
@@ -325,8 +326,15 @@
      }
      function viewleaderboardfun()
      {
+      console.log("inside leaderboard function");
       socket.emit('view leaderboard',{});
       location.href="/leaderboard";
+     }
+     function viewpastgames()
+     {
+      
+      socket.emit('view pastgames',{user:$username.val()});
+      location.href="/pastgame";
      }
 		   function playmultiplayerfun()
         {
@@ -480,7 +488,7 @@
        $timer2.val(time2);
        timerid=setInterval(function() {
           console.log(time1+" "+time2);
-          if(flag==1)
+          if(flag==1||$message2.val()=='player X turn')
           {
             time1=time1-1;
              
@@ -489,7 +497,7 @@
           {
             clearInterval(timerid);
               $message2.val("you lose");
-               socket.emit("new record",{msg:$message2.val(),user:$username.val()});
+               socket.emit("new record",{msg:$message2.val(),user:$username.val(),p1:player1,p2:player2});
                flag=0;
           }
           }
@@ -502,7 +510,7 @@
               clearInterval(timerid);
               console.log("time exceeded u won");
               $message2.val("you win");
-               socket.emit("new record",{msg:$message2.val(),user:$username.val()});
+               socket.emit("new record",{msg:$message2.val(),user:$username.val(),p1:player1,p2:player2});
                flag=0;
             }
           }
@@ -550,13 +558,13 @@
 	      	console.log("playing singleplayer");
              if(checkforwinner(document.turn))
                {
-
+                 clearInterval(timerid);
           	console.log("single winner is found");
          	$message2.val("you win");
                }
                else
                	if(availablespots()==0)
-               	{
+               	{clearInterval(timerid);
                		$message2.val("draw");
                	}
                else
@@ -572,7 +580,7 @@
           {
           	 if(checkforwinner(document.turn))
                {
-
+             clearInterval(timerid);
          // 	console.log("single winner is found");
              if(document.turn=="x")
                   $message2.val("player=>X won");
@@ -581,7 +589,7 @@
                }
                else
                	if(availablespots()==0)
-               	{
+               	{clearInterval(timerid);
                		$message2.val("draw");
                	}
                else
@@ -819,22 +827,23 @@
        {
        	console.log("winner is found");
        	
-       	
+       	clearInterval(timerid);
        	 if(data.playername==$username.val())
        	{$message2.val("you win");
-        socket.emit("new record",{msg:$message2.val(),user:$username.val()});
+        socket.emit("new record",{msg:$message2.val(),user:$username.val(),p1:player1,p2:player2});
         }
        else
-       {
+        {
        	$message2.val("you lose");
-        socket.emit("new record",{msg:$message2.val(),user:$username.val()});
-       }
-       }
+        socket.emit("new record",{msg:$message2.val(),user:$username.val(),p1:player1,p2:player2});
+        }
+        }
        else 
        	if(availablespots()==0)
        	{
+          clearInterval(timerid);
        		$message2.val("draw");
-           socket.emit("new record",{msg:$message2.val(),user:$username.val()});
+           socket.emit("new record",{msg:$message2.val(),user:$username.val(),p1:player1,p2:player2});
        	}
        
        else 
@@ -844,7 +853,7 @@
        messagechange();}
 
         
-	});
+	      });
 	
 </script>
 </body>
